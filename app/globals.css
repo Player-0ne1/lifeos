@@ -1,0 +1,128 @@
+/* ── Google Fonts ─────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,300;1,6..72,400&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+
+@import "tailwindcss";
+
+/* ── Base reset ───────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+  font-feature-settings: 'ss01', 'liga';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--ls-bg, #17140f);
+  color: var(--ls-ink, #f0e6d2);
+}
+
+/* ── Typography ───────────────────────────────────────────────────────────── */
+.ls-mono, .ls-mono * {
+  font-family: 'JetBrains Mono', ui-monospace, monospace !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.ls-num {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Newsreader', serif;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  margin: 0;
+}
+
+button, input, textarea, select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────────────────── */
+.ls-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.ls-scroll::-webkit-scrollbar-track { background: transparent; }
+.ls-scroll::-webkit-scrollbar-thumb { background: var(--ls-ink-mute, #6e6353); border-radius: 999px; }
+
+/* ── Animations ───────────────────────────────────────────────────────────── */
+@keyframes ls-invert-flash {
+  0%   { filter: none; }
+  8%   { filter: invert(1) hue-rotate(180deg); }
+  55%  { filter: invert(1) hue-rotate(180deg); }
+  100% { filter: none; }
+}
+.ls-invert {
+  animation: ls-invert-flash 1.2s ease-in-out forwards;
+}
+
+@keyframes ls-stamp-drop {
+  0%   { transform: translate(-50%, -50%) scale(2.4) rotate(-14deg); opacity: 0; }
+  60%  { transform: translate(-50%, -50%) scale(1.05) rotate(-6deg); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1) rotate(-4deg); opacity: 0.92; }
+}
+.ls-stamp-anim {
+  animation: ls-stamp-drop 0.45s cubic-bezier(.2,.7,.3,1) forwards;
+}
+
+@keyframes ls-teletype-cursor {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+.ls-cursor {
+  animation: ls-teletype-cursor 0.9s steps(1) infinite;
+}
+
+@keyframes ls-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ls-fade-in {
+  animation: ls-fade-in 0.2s ease forwards;
+}
+
+/* ── Rule variants ─────────────────────────────────────────────────────────── */
+.ls-rule-dash {
+  background-image: repeating-linear-gradient(to right, currentColor 0, currentColor 4px, transparent 4px, transparent 8px);
+  height: 1px;
+  opacity: 0.5;
+  width: 100%;
+}
+.ls-rule-double {
+  border-top: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  height: 4px;
+  opacity: 0.4;
+}
+
+/* ── Pressable ─────────────────────────────────────────────────────────────── */
+.ls-press {
+  transition: background 120ms ease, color 120ms ease, opacity 120ms ease, transform 120ms ease;
+}
+.ls-press:active { transform: translateY(0.5px); }
+.ls-press[disabled] { opacity: 0.35; pointer-events: none; }
+
+/* ── Overlay ───────────────────────────────────────────────────────────────── */
+.ls-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--ls-bg, #17140f);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── App shell ─────────────────────────────────────────────────────────────── */
+#root, main {
+  height: 100%;
+}
