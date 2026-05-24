@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The System · LifeOS</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #0c0a07;
+    font-family: 'Newsreader', Georgia, serif;
+    overflow: hidden;
+  }
+  #root { width: 100vw; height: 100vh; overflow: hidden; }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Frame + tweaks + canvas helpers -->
+<script type="text/babel" src="lifeos/design-canvas.jsx"></script>
+<script type="text/babel" src="lifeos/ios-frame.jsx"></script>
+<script type="text/babel" src="lifeos/browser-window.jsx"></script>
+<script type="text/babel" src="lifeos/tweaks-panel.jsx"></script>
+
+<!-- LifeOS modules (in dependency order) -->
+<script type="text/babel" src="lifeos/theme.jsx"></script>
+<script type="text/babel" src="lifeos/state.jsx"></script>
+<script type="text/babel" src="lifeos/primitives.jsx"></script>
+<script type="text/babel" src="lifeos/nav.jsx"></script>
+<script type="text/babel" src="lifeos/flows.jsx"></script>
+<script type="text/babel" src="lifeos/screen-directive.jsx"></script>
+<script type="text/babel" src="lifeos/screen-character.jsx"></script>
+<script type="text/babel" src="lifeos/screen-quests.jsx"></script>
+<script type="text/babel" src="lifeos/screen-ledger.jsx"></script>
+<script type="text/babel" src="lifeos/screen-onboarding.jsx"></script>
+<script type="text/babel" src="lifeos/app.jsx"></script>
+
+<script type="text/babel" data-presets="env,react">
+  injectGlobalStyles();
+
+  // Persisted defaults — these survive Tweaks edits via the host bridge.
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "theme": "vellum",
+    "voice": "cold",
+    "density": "comfortable",
+    "dayState": "mid-day"
+  }/*EDITMODE-END*/;
+
+  const { useState, useEffect } = React;
+
+  function Root() {
+    const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+    // Independent dayState in case user wants to swap quickly without persisting
+    const [dayState, setDayState] = useState(t.dayState);
+    useEffect(() => { setDayState(t.dayState); }, [t.dayState]);
+
+    return (
+      <AppProvider
+        theme={t.theme}
+        voice={t.voice}
+        density={t.density}
+        dayState={dayState}
+        setDayState={(ds) => { setDayState(ds); setTweak('dayState', ds); }}
+      >
+        <Canvas />
+        <TweaksUI t={t} setTweak={setTweak} />
+      </AppProvider>
+    );
+  }
+
+  function TweaksUI({ t, setTweak }) {
+    return (
+      <TweaksPanel>
+        <TweakSection label="Atmosphere" />
+        <TweakColor
+          label="Theme"
+          value={t.theme === 'vellum'
+            ? ['#17140f','#f0e6d2','#b8862e']
+            : t.theme === 'graphite'
+              ? ['#0e0f10','#e8e9eb','#aab1bd']
+              : ['#f1ece1','#1c1812','#7a1c1c']}
+          options={[
+            ['#17140f','#f0e6d2','#b8862e'],
+            ['#0e0f10','#e8e9eb','#aab1bd'],
+            ['#f1ece1','#1c1812','#7a1c1c'],
+          ]}
+          onChange={(palette) => {
+            const map = {
+              '#17140f': 'vellum',
+              '#0e0f10': 'graphite',
+              '#f1ece1': 'paper',
+            };
+            setTweak('theme', map[palette[0]] || 'vellum');
+          }}
+        />
+        <TweakRadio
+          label="Voice"
+          value={t.voice}
+          options={['cold','judicial','oracular']}
+          onChange={(v) => setTweak('voice', v)}
+        />
+        <TweakRadio
+          label="Density"
+          value={t.density}
+          options={['comfortable','dense']}
+          onChange={(v) => setTweak('density', v)}
+        />
+
+        <TweakSection label="State demo" />
+        <TweakSelect
+          label="Day state"
+          value={t.dayState}
+          options={['onboarding','pre-checkin','mid-day','evening','all-complete','failed']}
+          onChange={(v) => setTweak('dayState', v)}
+        />
+      </TweaksPanel>
+    );
+  }
+
+  // ─── Canvas with phone + desktop side-by-side ──────────────────────────────
+  function Canvas() {
+    const { theme } = useApp();
+
+    return (
+      <DesignCanvas>
+        <DCSection id="primary" title="The System · LifeOS" subtitle="One prototype, two surfaces. Shared state — try the Tweaks panel.">
+          <DCArtboard id="phone" label="iOS · phone" width={402} height={874}>
+            <PhoneArtboard />
+          </DCArtboard>
+          <DCArtboard id="desktop" label="Desktop · web app" width={1180} height={760}>
+            <DesktopArtboard />
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    );
+  }
+
+  function PhoneArtboard() {
+    const { theme } = useApp();
+    // iOS frame status bar — picks light icons for dark themes, dark for paper
+    const isDark = theme.bg !== '#f1ece1';
+    return (
+      <IOSDevice width={402} height={874} dark={isDark}>
+        {/* Push content below the status bar. The IOSDevice already paints
+            status bar absolutely, so we just add top padding. */}
+        <div style={{ paddingTop: 54, height: '100%' }}>
+          <LifeOSApp device="phone" />
+        </div>
+      </IOSDevice>
+    );
+  }
+
+  function DesktopArtboard() {
+    return (
+      <ChromeWindow
+        width={1180}
+        height={760}
+        tabs={[{ title: 'The System' }]}
+        url="thesystem.app/directive"
+      >
+        <LifeOSApp device="desktop" />
+      </ChromeWindow>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
+</script>
+
+</body>
+</html>
