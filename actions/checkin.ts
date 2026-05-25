@@ -10,7 +10,7 @@ export async function submitMorningCheckin(
   energy: number,
   constraints: string,
   mindNote: string
-): Promise<{ success: boolean; directiveText?: string; questIds?: string[] }> {
+): Promise<{ success: boolean; directiveText?: string; questIds?: string[]; error?: string }> {
   try {
     // Create or update today's check-in
     const today = todayIST();
@@ -41,6 +41,7 @@ export async function submitMorningCheckin(
     // Create quest log entries from directive
     const questIds: string[] = [];
     for (const q of [...result.mandatoryQuests, result.bonusQuest]) {
+      if (!q) continue;
       const created = await createQuest({
         title: q.title,
         stat: q.stat as import('@/lib/notion/types').Stat,
@@ -68,7 +69,7 @@ export async function submitMorningCheckin(
     return { success: true, directiveText: result.directiveText, questIds };
   } catch (error) {
     console.error('submitMorningCheckin error:', error);
-    return { success: false };
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
 
