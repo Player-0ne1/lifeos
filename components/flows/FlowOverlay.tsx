@@ -17,7 +17,7 @@ import { submitSundayRitual } from '@/actions/ledger';
 // ─── Teletype animation ───────────────────────────────────────────────────────
 
 const GENERATING_MSGS = [
-  'Reading your state...',
+  'Reading your state...', 
   'Cross-referencing stat decay...',
   'Calibrating difficulty...',
   'Assigning quest load...',
