@@ -82,7 +82,7 @@ SELECTION RULES:
 5. Bonus quest should be a different stat from all 3 mandatory quests.`;
 
   const response = await client.messages.create({
-    model: 'claude-opus-4-7',
+    model: 'claude-sonnet-4-5',
     max_tokens: 1024,
     system: [
       {
