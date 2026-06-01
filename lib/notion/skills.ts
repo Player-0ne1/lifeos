@@ -35,7 +35,7 @@ export async function getSkills(statFilter?: Stat): Promise<Skill[]> {
   const notion = getNotionClient();
 
   const queryParams: any = {
-    database_id: DB.SKILL_REGISTRY,
+    data_source_id: DB.SKILL_REGISTRY,
     sorts: [
       { property: 'Stat', direction: 'ascending' },
       { property: 'Tier', direction: 'ascending' },

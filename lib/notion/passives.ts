@@ -36,7 +36,7 @@ export async function getPassives(statusFilter?: PassiveStatus): Promise<Passive
   const notion = getNotionClient();
 
   const queryParams: any = {
-    database_id: DB.PASSIVE_LIBRARY,
+    data_source_id: DB.PASSIVE_LIBRARY,
     sorts: [{ property: 'Title', direction: 'ascending' }],
     page_size: 100,
   };

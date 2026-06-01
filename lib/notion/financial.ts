@@ -55,7 +55,7 @@ export async function getFinancialEntries(filter?: {
   }
 
   const queryParams: any = {
-    database_id: DB.FINANCIAL_LOG,
+    data_source_id: DB.FINANCIAL_LOG,
     sorts: [{ property: 'Date', direction: 'descending' }],
     page_size: filter?.limit ? Math.min(filter.limit, 100) : 100,
   };

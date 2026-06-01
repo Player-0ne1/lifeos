@@ -37,7 +37,7 @@ export async function getStatHistory(
   const notion = getNotionClient();
 
   const queryParams: any = {
-    database_id: DB.STAT_HISTORY,
+    data_source_id: DB.STAT_HISTORY,
     sorts: [{ property: 'Date', direction: 'descending' }],
     page_size: Math.min(limit, 100),
   };
