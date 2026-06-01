@@ -66,7 +66,7 @@ export async function getFinancialEntries(filter?: {
     queryParams.filter = { and: filters };
   }
 
-  const res = await notion.databases.query(queryParams);
+  const res = await notion.dataSources.query(queryParams);
 
   return res.results
     .filter((page) => page.object === 'page')

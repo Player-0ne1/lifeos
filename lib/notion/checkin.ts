@@ -49,7 +49,7 @@ export async function getTodayCheckin(): Promise<DailyCheckin | null> {
   const notion = getNotionClient();
   const today = new Date().toISOString().split('T')[0];
 
-  const res = await notion.databases.query({
+  const res = await notion.dataSources.query({
     data_source_id: DB.CHECKIN_LOG,
     filter: {
       property: 'Date',
@@ -142,7 +142,7 @@ export async function getRecentCheckins(days: number = 7): Promise<DailyCheckin[
   since.setDate(since.getDate() - days);
   const sinceStr = since.toISOString().split('T')[0];
 
-  const res = await notion.databases.query({
+  const res = await notion.dataSources.query({
     data_source_id: DB.CHECKIN_LOG,
     filter: {
       property: 'Date',

@@ -20,7 +20,7 @@ function prop(page: any, name: string, type: string): any {
 
 export async function getPlayerProfile(): Promise<PlayerProfile> {
   const notion = getNotionClient();
-  const res = await notion.databases.query({
+  const res = await notion.dataSources.query({
     data_source_id: DB.PLAYER_PROFILE,
     page_size: 1,
   });
@@ -86,7 +86,7 @@ export async function updatePlayerProfile(
 
 export async function getCharacterStats(): Promise<CharacterStat[]> {
   const notion = getNotionClient();
-  const res = await notion.databases.query({
+  const res = await notion.dataSources.query({
     data_source_id: DB.CHARACTER_SHEET,
     page_size: 100,
     sorts: [{ property: 'Stat Name', direction: 'ascending' }],
@@ -110,7 +110,7 @@ export async function updateCharacterStat(
   const notion = getNotionClient();
 
   // Find the page for the given stat by title
-  const res = await notion.databases.query({
+  const res = await notion.dataSources.query({
     data_source_id: DB.CHARACTER_SHEET,
     filter: {
       property: 'Stat Name',

@@ -49,7 +49,7 @@ export async function getStatHistory(
     };
   }
 
-  const res = await notion.databases.query(queryParams);
+  const res = await notion.dataSources.query(queryParams);
 
   return res.results
     .filter((page) => page.object === 'page')

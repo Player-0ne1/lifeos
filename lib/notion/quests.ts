@@ -68,7 +68,7 @@ function mapQuestTemplate(page: any): QuestTemplate {
 
 export async function getActiveQuests(): Promise<Quest[]> {
   const notion = getNotionClient();
-  const res = await notion.databases.query({
+  const res = await notion.dataSources.query({
     data_source_id: DB.QUEST_LOG,
     filter: {
       or: [
@@ -115,7 +115,7 @@ export async function getQuestLog(filter?: { status?: QuestStatus; stat?: Stat; 
     queryParams.filter = { and: filters };
   }
 
-  const res = await notion.databases.query(queryParams);
+  const res = await notion.dataSources.query(queryParams);
 
   return res.results
     .filter((page) => page.object === 'page')
@@ -138,7 +138,7 @@ export async function getQuestLibrary(statFilter?: Stat): Promise<QuestTemplate[
     };
   }
 
-  const res = await notion.databases.query(queryParams);
+  const res = await notion.dataSources.query(queryParams);
 
   return res.results
     .filter((page) => page.object === 'page')

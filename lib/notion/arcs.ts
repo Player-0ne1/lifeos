@@ -37,7 +37,7 @@ function mapArc(page: any): ArcTracker {
 export async function getActiveArc(): Promise<ArcTracker | null> {
   const notion = getNotionClient();
 
-  const res = await notion.databases.query({
+  const res = await notion.dataSources.query({
     data_source_id: DB.ARC_TRACKER,
     filter: {
       property: 'Status',
@@ -55,7 +55,7 @@ export async function getActiveArc(): Promise<ArcTracker | null> {
 export async function getAllArcs(): Promise<ArcTracker[]> {
   const notion = getNotionClient();
 
-  const res = await notion.databases.query({
+  const res = await notion.dataSources.query({
     data_source_id: DB.ARC_TRACKER,
     sorts: [{ property: 'Status', direction: 'ascending' }],
     page_size: 100,

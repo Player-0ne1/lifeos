@@ -36,7 +36,7 @@ function mapLedger(page: any): WeeklyLedger {
 export async function getCurrentWeekLedger(): Promise<WeeklyLedger | null> {
   const notion = getNotionClient();
 
-  const res = await notion.databases.query({
+  const res = await notion.dataSources.query({
     data_source_id: DB.WEEKLY_LEDGER,
     filter: {
       property: 'Status',
@@ -54,7 +54,7 @@ export async function getCurrentWeekLedger(): Promise<WeeklyLedger | null> {
 export async function getWeeklyHistory(limit: number = 12): Promise<WeeklyLedger[]> {
   const notion = getNotionClient();
 
-  const res = await notion.databases.query({
+  const res = await notion.dataSources.query({
     data_source_id: DB.WEEKLY_LEDGER,
     sorts: [{ property: 'Week Num', direction: 'descending' }],
     page_size: Math.min(limit, 100),
@@ -71,7 +71,7 @@ export async function createOrUpdateWeekLedger(
   const notion = getNotionClient();
 
   // Check if a ledger for this week already exists
-  const existing = await notion.databases.query({
+  const existing = await notion.dataSources.query({
     data_source_id: DB.WEEKLY_LEDGER,
     filter: {
       property: 'Week Num',

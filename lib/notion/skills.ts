@@ -50,7 +50,7 @@ export async function getSkills(statFilter?: Stat): Promise<Skill[]> {
     };
   }
 
-  const res = await notion.databases.query(queryParams);
+  const res = await notion.dataSources.query(queryParams);
 
   return res.results
     .filter((page) => page.object === 'page')
@@ -60,7 +60,7 @@ export async function getSkills(statFilter?: Stat): Promise<Skill[]> {
 export async function getUnlockedSkills(): Promise<Skill[]> {
   const notion = getNotionClient();
 
-  const res = await notion.databases.query({
+  const res = await notion.dataSources.query({
     data_source_id: DB.SKILL_REGISTRY,
     filter: {
       property: 'Status',
