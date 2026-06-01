@@ -61,7 +61,7 @@ export async function getUnlockedSkills(): Promise<Skill[]> {
   const notion = getNotionClient();
 
   const res = await notion.databases.query({
-    database_id: DB.SKILL_REGISTRY,
+    data_source_id: DB.SKILL_REGISTRY,
     filter: {
       property: 'Status',
       select: { equals: 'unlocked' },

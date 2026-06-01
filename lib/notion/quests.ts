@@ -69,7 +69,7 @@ function mapQuestTemplate(page: any): QuestTemplate {
 export async function getActiveQuests(): Promise<Quest[]> {
   const notion = getNotionClient();
   const res = await notion.databases.query({
-    database_id: DB.QUEST_LOG,
+    data_source_id: DB.QUEST_LOG,
     filter: {
       or: [
         { property: 'Status', select: { equals: 'Assigned' } },
@@ -104,7 +104,7 @@ export async function getQuestLog(filter?: { status?: QuestStatus; stat?: Stat; 
   }
 
   const queryParams: any = {
-    database_id: DB.QUEST_LOG,
+    data_source_id: DB.QUEST_LOG,
     sorts: [{ property: 'System Day', direction: 'descending' }],
     page_size: 100,
   };
@@ -126,7 +126,7 @@ export async function getQuestLibrary(statFilter?: Stat): Promise<QuestTemplate[
   const notion = getNotionClient();
 
   const queryParams: any = {
-    database_id: DB.QUEST_LIBRARY,
+    data_source_id: DB.QUEST_LIBRARY,
     sorts: [{ property: 'Quest Name', direction: 'ascending' }],
     page_size: 100,
   };
