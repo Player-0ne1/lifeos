@@ -38,9 +38,7 @@ export async function generateDirective(
     `[${q.stat}/${q.difficulty}] "${q.title}" — ${q.xpValue}XP — Proof: ${q.proofStandard}`
   ).join('\n');
 
-  const prompt = `${SYSTEM_PERSONA}
-
-${getVoiceInstruction(voice)}
+  const prompt = `${getVoiceInstruction(voice)}
 
 PLAYER STATE:
 - Name: ${player.name}
@@ -82,7 +80,7 @@ SELECTION RULES:
 5. Bonus quest should be a different stat from all 3 mandatory quests.`;
 
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-5',
+    model: (process.env.CLAUDE_MODEL || 'claude-sonnet-4-5') as string,
     max_tokens: 1024,
     system: [
       {

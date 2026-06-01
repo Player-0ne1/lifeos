@@ -20,38 +20,47 @@ function prop(page: any, name: string, type: string): any {
 // ─── Mappers ──────────────────────────────────────────────────────────────────
 
 function mapQuest(page: any): Quest {
+  const status = prop(page, 'Status', 'select') as string;
+  // Map Notion status values to internal QuestStatus
+  const statusMap: Record<string, QuestStatus> = {
+    'Assigned': 'open',
+    'Proof Submitted': 'open',
+    'Complete': 'complete',
+    'Failed': 'failed',
+  };
+
   return {
     id: page.id,
-    title: prop(page, 'Title', 'title'),
+    title: prop(page, 'Quest Name', 'title'),
     stat: prop(page, 'Stat', 'select') as Stat,
-    xp: prop(page, 'XP', 'number'),
-    points: prop(page, 'Points', 'number'),
+    xp: prop(page, 'XP Value', 'number'),
+    points: prop(page, 'XP Value', 'number'), // mapped to XP Value
     difficulty: prop(page, 'Difficulty', 'select') as Difficulty,
-    status: prop(page, 'Status', 'select') as QuestStatus,
-    dayAssigned: prop(page, 'Day Assigned', 'number'),
-    proofType: prop(page, 'Proof Type', 'select') ?? '',
-    proofStandard: prop(page, 'Proof Standard', 'rich_text'),
-    proofText: prop(page, 'Proof Text', 'rich_text') || undefined,
-    proofUrl: prop(page, 'Proof URL', 'url') || undefined,
-    isArc: prop(page, 'Is Arc', 'checkbox'),
-    arcName: prop(page, 'Arc Name', 'rich_text') || undefined,
-    isBonus: prop(page, 'Is Bonus', 'checkbox'),
-    deadline: prop(page, 'Deadline', 'date'),
-    brief: prop(page, 'Brief', 'rich_text'),
+    status: (statusMap[status] ?? 'open') as QuestStatus,
+    dayAssigned: prop(page, 'System Day', 'number'),
+    proofType: '',
+    proofStandard: '',
+    proofText: undefined,
+    proofUrl: undefined,
+    isArc: false,
+    arcName: undefined,
+    isBonus: prop(page, 'Type', 'select') === 'Bonus',
+    deadline: prop(page, 'Date Assigned', 'date'),
+    brief: prop(page, 'Notes', 'rich_text'),
   };
 }
 
 function mapQuestTemplate(page: any): QuestTemplate {
   return {
     id: page.id,
-    title: prop(page, 'Title', 'title'),
+    title: prop(page, 'Quest Name', 'title'),
     stat: prop(page, 'Stat', 'select') as Stat,
     xpValue: prop(page, 'XP Value', 'number'),
     difficulty: prop(page, 'Difficulty', 'select') as Difficulty,
     proofStandard: prop(page, 'Proof Standard', 'rich_text'),
-    brief: prop(page, 'Brief', 'rich_text'),
-    timeEstimate: prop(page, 'Time Estimate', 'rich_text'),
-    energyLevel: prop(page, 'Energy Level', 'select') as EnergyLevel,
+    brief: prop(page, 'Brief Template', 'rich_text'),
+    timeEstimate: prop(page, 'Time Estimate', 'select') ?? '',
+    energyLevel: prop(page, 'Energy Required', 'select') as EnergyLevel,
   };
 }
 
@@ -59,13 +68,15 @@ function mapQuestTemplate(page: any): QuestTemplate {
 
 export async function getActiveQuests(): Promise<Quest[]> {
   const notion = getNotionClient();
-  const res = await notion.dataSources.query({
-    data_source_id: DB.QUEST_LOG,
+  const res = await notion.databases.query({
+    database_id: DB.QUEST_LOG,
     filter: {
-      property: 'Status',
-      select: { equals: 'open' },
+      or: [
+        { property: 'Status', select: { equals: 'Assigned' } },
+        { property: 'Status', select: { equals: 'Proof Submitted' } },
+      ],
     },
-    sorts: [{ property: 'Day Assigned', direction: 'ascending' }],
+    sorts: [{ property: 'System Day', direction: 'ascending' }],
     page_size: 100,
   });
 
@@ -80,18 +91,21 @@ export async function getQuestLog(filter?: { status?: QuestStatus; stat?: Stat; 
   const filters: any[] = [];
 
   if (filter?.status) {
-    filters.push({ property: 'Status', select: { equals: filter.status } });
+    const notionStatus = filter.status === 'open' ? 'Assigned' :
+                         filter.status === 'complete' ? 'Complete' :
+                         filter.status === 'failed' ? 'Failed' : 'Assigned';
+    filters.push({ property: 'Status', select: { equals: notionStatus } });
   }
   if (filter?.stat) {
     filters.push({ property: 'Stat', select: { equals: filter.stat } });
   }
   if (filter?.day !== undefined) {
-    filters.push({ property: 'Day Assigned', number: { equals: filter.day } });
+    filters.push({ property: 'System Day', number: { equals: filter.day } });
   }
 
   const queryParams: any = {
-    data_source_id: DB.QUEST_LOG,
-    sorts: [{ property: 'Day Assigned', direction: 'descending' }],
+    database_id: DB.QUEST_LOG,
+    sorts: [{ property: 'System Day', direction: 'descending' }],
     page_size: 100,
   };
 
@@ -101,7 +115,7 @@ export async function getQuestLog(filter?: { status?: QuestStatus; stat?: Stat; 
     queryParams.filter = { and: filters };
   }
 
-  const res = await notion.dataSources.query(queryParams);
+  const res = await notion.databases.query(queryParams);
 
   return res.results
     .filter((page) => page.object === 'page')
@@ -112,8 +126,8 @@ export async function getQuestLibrary(statFilter?: Stat): Promise<QuestTemplate[
   const notion = getNotionClient();
 
   const queryParams: any = {
-    data_source_id: DB.QUEST_LIBRARY,
-    sorts: [{ property: 'Title', direction: 'ascending' }],
+    database_id: DB.QUEST_LIBRARY,
+    sorts: [{ property: 'Quest Name', direction: 'ascending' }],
     page_size: 100,
   };
 
@@ -124,7 +138,7 @@ export async function getQuestLibrary(statFilter?: Stat): Promise<QuestTemplate[
     };
   }
 
-  const res = await notion.dataSources.query(queryParams);
+  const res = await notion.databases.query(queryParams);
 
   return res.results
     .filter((page) => page.object === 'page')
@@ -141,41 +155,27 @@ export async function createQuest(
   data: Omit<Quest, 'id'>
 ): Promise<Quest> {
   const notion = getNotionClient();
+  const today = new Date().toISOString().split('T')[0];
+  const weekNumber = Math.ceil((data.dayAssigned || 1) / 7);
 
   const properties: Record<string, any> = {
-    Title: { title: [{ text: { content: data.title } }] },
+    'Quest Name': { title: [{ text: { content: data.title } }] },
     Stat: { select: { name: data.stat } },
-    XP: { number: data.xp },
-    Points: { number: data.points },
+    'XP Value': { number: data.xp },
     Difficulty: { select: { name: data.difficulty } },
-    Status: { select: { name: data.status } },
-    'Day Assigned': { number: data.dayAssigned },
-    'Proof Type': { select: { name: data.proofType } },
-    'Proof Standard': { rich_text: [{ text: { content: data.proofStandard } }] },
-    Brief: { rich_text: [{ text: { content: data.brief } }] },
+    Status: { select: { name: 'Assigned' } },
+    'System Day': { number: data.dayAssigned },
+    'Week Number': { number: weekNumber },
+    'Date Assigned': { date: { start: today } },
+    Type: { select: { name: data.isBonus ? 'Bonus' : 'Daily' } },
   };
 
-  if (data.proofText) {
-    properties['Proof Text'] = { rich_text: [{ text: { content: data.proofText } }] };
-  }
-  if (data.proofUrl) {
-    properties['Proof URL'] = { url: data.proofUrl };
-  }
-  if (data.isArc !== undefined) {
-    properties['Is Arc'] = { checkbox: data.isArc };
-  }
-  if (data.arcName) {
-    properties['Arc Name'] = { rich_text: [{ text: { content: data.arcName } }] };
-  }
-  if (data.isBonus !== undefined) {
-    properties['Is Bonus'] = { checkbox: data.isBonus };
-  }
-  if (data.deadline) {
-    properties['Deadline'] = { date: { start: data.deadline } };
+  if (data.brief) {
+    properties['Notes'] = { rich_text: [{ text: { content: data.brief } }] };
   }
 
   const page = await notion.pages.create({
-    parent: { data_source_id: DB.QUEST_LOG },
+    parent: { database_id: DB.QUEST_LOG },
     properties,
   });
 
@@ -189,17 +189,18 @@ export async function updateQuestStatus(
 ): Promise<void> {
   const notion = getNotionClient();
 
+  const notionStatus = status === 'open' ? 'Assigned' :
+                       status === 'complete' ? 'Complete' :
+                       status === 'failed' ? 'Failed' : 'Assigned';
+
   const properties: Record<string, any> = {
-    Status: { select: { name: status } },
+    Status: { select: { name: notionStatus } },
   };
 
   if (proofData?.proofText) {
-    properties['Proof Text'] = {
+    properties['Proof'] = {
       rich_text: [{ text: { content: proofData.proofText } }],
     };
-  }
-  if (proofData?.proofUrl) {
-    properties['Proof URL'] = { url: proofData.proofUrl };
   }
 
   await notion.pages.update({ page_id: id, properties });

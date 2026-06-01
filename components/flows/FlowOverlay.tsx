@@ -330,11 +330,13 @@ function MorningFlow({ onClose }: MorningFlowProps) {
   const [mindNote, setMindNote] = useState('');
   const [generating, setGenerating] = useState(false);
   const [genLines, setGenLines] = useState<string[]>([]);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   async function handleSubmit() {
     setStep(3);
     setGenerating(true);
+    setSubmitError(null);
 
     // Teletype animation
     for (let i = 0; i < GENERATING_MSGS.length; i++) {
@@ -344,7 +346,15 @@ function MorningFlow({ onClose }: MorningFlowProps) {
 
     startTransition(async () => {
       try {
-        await submitMorningCheckin(energy, constraints, mindNote);
+        const result = await submitMorningCheckin(energy, constraints, mindNote);
+        if (!result.success) {
+          console.error('Morning checkin error:', result.error);
+          setSubmitError(result.error ?? 'Directive generation failed. Please try again.');
+          setGenerating(false);
+          setGenLines([]);
+          setStep(2);
+          return;
+        }
         setDayState('mid-day');
         await new Promise((res) => setTimeout(res, 600));
         onClose();
@@ -352,7 +362,10 @@ function MorningFlow({ onClose }: MorningFlowProps) {
         router.refresh();
       } catch (err) {
         console.error('Morning checkin error:', err);
-        onClose();
+        setSubmitError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+        setGenerating(false);
+        setGenLines([]);
+        setStep(2);
       }
     });
   }
@@ -463,6 +476,22 @@ function MorningFlow({ onClose }: MorningFlowProps) {
                 Issue Directive
               </Btn>
             </div>
+            {submitError && (
+              <div
+                style={{
+                  marginTop: density.gap,
+                  padding: `${density.gap * 0.75}px ${density.gap}px`,
+                  background: 'rgba(239,68,68,0.1)',
+                  border: '1px solid rgba(239,68,68,0.4)',
+                  borderRadius: 6,
+                  color: '#ef4444',
+                  fontSize: density.fontBody * 0.875,
+                  lineHeight: 1.4,
+                }}
+              >
+                ⚠ {submitError}
+              </div>
+            )}
           </>
         )}
       </div>

@@ -2,6 +2,14 @@ import { getNotionClient } from './client';
 import { DB } from './databases';
 import type { DailyCheckin, CheckinStatus } from './types';
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatEntryTitle(isoDate: string, time: 'Morning' | 'Evening' = 'Morning'): string {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${d} ${months[m - 1]} ${y} — ${time}`;
+}
+
 // ─── Notion property extractor ────────────────────────────────────────────────
 
 function prop(page: any, name: string, type: string): any {
@@ -24,14 +32,14 @@ function mapCheckin(page: any): DailyCheckin {
   return {
     id: page.id,
     date: prop(page, 'Date', 'date') ?? '',
-    energy: prop(page, 'Energy', 'number'),
-    constraints: prop(page, 'Constraints', 'rich_text'),
-    mindNote: prop(page, 'Mind Note', 'rich_text'),
-    directiveText: prop(page, 'Directive Text', 'rich_text') || undefined,
-    questIds: prop(page, 'Quests', 'relation'),
-    closeEnergy: prop(page, 'Close Energy', 'number_or_null') ?? undefined,
-    dayNote: prop(page, 'Day Note', 'rich_text') || undefined,
-    status: prop(page, 'Status', 'select') as CheckinStatus,
+    energy: prop(page, 'Energy Level', 'number'),
+    constraints: prop(page, 'Hard Constraints', 'rich_text'),
+    mindNote: prop(page, 'One Thing On Mind', 'rich_text'),
+    directiveText: undefined, // not stored in Notion schema
+    questIds: prop(page, 'Quest Log Entries', 'relation'),
+    closeEnergy: undefined, // not stored in Notion schema
+    dayNote: prop(page, 'One Sentence On The Day', 'rich_text') || undefined,
+    status: 'active' as CheckinStatus, // derived field, not stored
   };
 }
 
@@ -41,8 +49,8 @@ export async function getTodayCheckin(): Promise<DailyCheckin | null> {
   const notion = getNotionClient();
   const today = new Date().toISOString().split('T')[0];
 
-  const res = await notion.dataSources.query({
-    data_source_id: DB.CHECKIN_LOG,
+  const res = await notion.databases.query({
+    database_id: DB.CHECKIN_LOG,
     filter: {
       property: 'Date',
       date: { equals: today },
@@ -61,35 +69,28 @@ export async function createCheckin(
   const notion = getNotionClient();
 
   const properties: Record<string, any> = {
-    // Use date as the page title for readability
+    Entry: { title: [{ text: { content: formatEntryTitle(data.date, 'Morning') } }] },
     Date: { date: { start: data.date } },
-    Energy: { number: data.energy },
-    Constraints: { rich_text: [{ text: { content: data.constraints } }] },
-    'Mind Note': { rich_text: [{ text: { content: data.mindNote } }] },
-    Status: { select: { name: data.status } },
+    'Check-in Time': { select: { name: 'Morning' } },
+    'Energy Level': { number: data.energy },
+    'Hard Constraints': { rich_text: [{ text: { content: data.constraints || '' } }] },
+    'One Thing On Mind': { rich_text: [{ text: { content: data.mindNote || '' } }] },
   };
 
-  if (data.directiveText) {
-    properties['Directive Text'] = {
-      rich_text: [{ text: { content: data.directiveText } }],
-    };
-  }
   if (data.questIds && data.questIds.length > 0) {
-    properties['Quests'] = {
+    properties['Quest Log Entries'] = {
       relation: data.questIds.map((id) => ({ id })),
     };
   }
-  if (data.closeEnergy !== undefined) {
-    properties['Close Energy'] = { number: data.closeEnergy };
-  }
+
   if (data.dayNote) {
-    properties['Day Note'] = {
+    properties['One Sentence On The Day'] = {
       rich_text: [{ text: { content: data.dayNote } }],
     };
   }
 
   const page = await notion.pages.create({
-    parent: { data_source_id: DB.CHECKIN_LOG },
+    parent: { database_id: DB.CHECKIN_LOG },
     properties,
   });
 
@@ -105,40 +106,30 @@ export async function updateCheckin(
 
   if (updates.date !== undefined) {
     properties['Date'] = { date: { start: updates.date } };
+    properties['Entry'] = { title: [{ text: { content: formatEntryTitle(updates.date, 'Morning') } }] };
   }
   if (updates.energy !== undefined) {
-    properties['Energy'] = { number: updates.energy };
+    properties['Energy Level'] = { number: updates.energy };
   }
   if (updates.constraints !== undefined) {
-    properties['Constraints'] = {
+    properties['Hard Constraints'] = {
       rich_text: [{ text: { content: updates.constraints } }],
     };
   }
   if (updates.mindNote !== undefined) {
-    properties['Mind Note'] = {
+    properties['One Thing On Mind'] = {
       rich_text: [{ text: { content: updates.mindNote } }],
     };
   }
-  if (updates.directiveText !== undefined) {
-    properties['Directive Text'] = {
-      rich_text: [{ text: { content: updates.directiveText } }],
-    };
-  }
   if (updates.questIds !== undefined) {
-    properties['Quests'] = {
+    properties['Quest Log Entries'] = {
       relation: updates.questIds.map((qid) => ({ id: qid })),
     };
   }
-  if (updates.closeEnergy !== undefined) {
-    properties['Close Energy'] = { number: updates.closeEnergy };
-  }
   if (updates.dayNote !== undefined) {
-    properties['Day Note'] = {
+    properties['One Sentence On The Day'] = {
       rich_text: [{ text: { content: updates.dayNote } }],
     };
-  }
-  if (updates.status !== undefined) {
-    properties['Status'] = { select: { name: updates.status } };
   }
 
   await notion.pages.update({ page_id: id, properties });
@@ -151,8 +142,8 @@ export async function getRecentCheckins(days: number = 7): Promise<DailyCheckin[
   since.setDate(since.getDate() - days);
   const sinceStr = since.toISOString().split('T')[0];
 
-  const res = await notion.dataSources.query({
-    data_source_id: DB.CHECKIN_LOG,
+  const res = await notion.databases.query({
+    database_id: DB.CHECKIN_LOG,
     filter: {
       property: 'Date',
       date: { on_or_after: sinceStr },

@@ -36,7 +36,7 @@ export async function getPassives(statusFilter?: PassiveStatus): Promise<Passive
   const notion = getNotionClient();
 
   const queryParams: any = {
-    data_source_id: DB.PASSIVE_LIBRARY,
+    database_id: DB.PASSIVE_LIBRARY,
     sorts: [{ property: 'Title', direction: 'ascending' }],
     page_size: 100,
   };
@@ -48,7 +48,7 @@ export async function getPassives(statusFilter?: PassiveStatus): Promise<Passive
     };
   }
 
-  const res = await notion.dataSources.query(queryParams);
+  const res = await notion.databases.query(queryParams);
 
   return res.results
     .filter((page) => page.object === 'page')

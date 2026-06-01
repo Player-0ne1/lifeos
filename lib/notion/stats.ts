@@ -37,7 +37,7 @@ export async function getStatHistory(
   const notion = getNotionClient();
 
   const queryParams: any = {
-    data_source_id: DB.STAT_HISTORY,
+    database_id: DB.STAT_HISTORY,
     sorts: [{ property: 'Date', direction: 'descending' }],
     page_size: Math.min(limit, 100),
   };
@@ -49,7 +49,7 @@ export async function getStatHistory(
     };
   }
 
-  const res = await notion.dataSources.query(queryParams);
+  const res = await notion.databases.query(queryParams);
 
   return res.results
     .filter((page) => page.object === 'page')
@@ -62,7 +62,7 @@ export async function addStatHistoryEntry(
   const notion = getNotionClient();
 
   const page = await notion.pages.create({
-    parent: { data_source_id: DB.STAT_HISTORY },
+    parent: { database_id: DB.STAT_HISTORY },
     properties: {
       // Title is a required Notion field — use the stat + date as a readable label
       Stat: { select: { name: entry.stat } },

@@ -55,7 +55,7 @@ export async function getFinancialEntries(filter?: {
   }
 
   const queryParams: any = {
-    data_source_id: DB.FINANCIAL_LOG,
+    database_id: DB.FINANCIAL_LOG,
     sorts: [{ property: 'Date', direction: 'descending' }],
     page_size: filter?.limit ? Math.min(filter.limit, 100) : 100,
   };
@@ -66,7 +66,7 @@ export async function getFinancialEntries(filter?: {
     queryParams.filter = { and: filters };
   }
 
-  const res = await notion.dataSources.query(queryParams);
+  const res = await notion.databases.query(queryParams);
 
   return res.results
     .filter((page) => page.object === 'page')
@@ -79,7 +79,7 @@ export async function addFinancialEntry(
   const notion = getNotionClient();
 
   const page = await notion.pages.create({
-    parent: { data_source_id: DB.FINANCIAL_LOG },
+    parent: { database_id: DB.FINANCIAL_LOG },
     properties: {
       Date: { date: { start: data.date } },
       Type: { select: { name: data.type } },
