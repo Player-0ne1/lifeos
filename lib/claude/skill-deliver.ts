@@ -1,4 +1,4 @@
-import { getAnthropicClient } from './client';
+import { getGroqClient } from './client';
 import { SYSTEM_PERSONA } from './prompts';
 import type { Skill } from '../notion/types';
 
@@ -6,7 +6,7 @@ export async function generateSkillDeliverable(
   skill: Skill,
   playerContext: { name: string; statScore: number; recentWork?: string }
 ): Promise<string> {
-  const client = getAnthropicClient();
+  const client = getGroqClient();
 
   const skillPrompts: Record<string, string> = {
     'The Sharpener': `Generate 3 specific, observational writing insights for ${playerContext.name} based on their CRAFT stat (score: ${playerContext.statScore}/100). These should be craft-level observations about their writing: clarity, precision, rhythm, word choice. Cold and specific. No generic advice. Each observation in 1 sentence.`,
@@ -17,12 +17,14 @@ export async function generateSkillDeliverable(
 
   const basePrompt = skillPrompts[skill.name] || `Generate a skill deliverable for: ${skill.name}. Stat: ${skill.stat}. Description: ${skill.description}`;
 
-  const response = await client.messages.create({
-    model: (process.env.CLAUDE_MODEL || 'claude-sonnet-4-5') as string,
+  const response = await client.chat.completions.create({
+    model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
     max_tokens: 512,
-    system: SYSTEM_PERSONA,
-    messages: [{ role: 'user', content: basePrompt }],
+    messages: [
+      { role: 'system', content: SYSTEM_PERSONA },
+      { role: 'user', content: basePrompt },
+    ],
   });
 
-  return response.content[0].type === 'text' ? response.content[0].text : '';
+  return response.choices[0].message.content || '';
 }

@@ -1,4 +1,4 @@
-import { getAnthropicClient } from './client';
+import { getGroqClient } from './client';
 import { SYSTEM_PERSONA } from './prompts';
 
 export interface ProofSubmission {
@@ -22,11 +22,9 @@ export async function scoreQuestProof(
   submission: ProofSubmission,
   xpBase: number
 ): Promise<ScoringResult> {
-  const client = getAnthropicClient();
+  const client = getGroqClient();
 
-  const prompt = `${SYSTEM_PERSONA}
-
-Evaluate this quest proof submission. Be exacting. The standard is the standard.
+  const userPrompt = `Evaluate this quest proof submission. Be exacting. The standard is the standard.
 
 QUEST: ${submission.questTitle}
 BRIEF: ${submission.questBrief}
@@ -49,13 +47,16 @@ Rules:
 - xpMultiplier: 1.25 for exceptional, 1.0 for meets standard, 0.75 for barely adequate, 0.5 for minimum
 - Never give positive feedback with exclamation marks. State what was adequate or inadequate.`;
 
-  const response = await client.messages.create({
-    model: (process.env.CLAUDE_MODEL || 'claude-sonnet-4-5') as string,
+  const response = await client.chat.completions.create({
+    model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
     max_tokens: 256,
-    messages: [{ role: 'user', content: prompt }],
+    messages: [
+      { role: 'system', content: SYSTEM_PERSONA },
+      { role: 'user', content: userPrompt },
+    ],
   });
 
-  const text = response.content[0].type === 'text' ? response.content[0].text : '{}';
+  const text = response.choices[0].message.content || '{}';
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) return { approved: false, xpAwarded: 0, xpBase, feedback: 'Proof not evaluated.' };
 
