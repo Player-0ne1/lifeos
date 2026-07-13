@@ -1,7 +1,7 @@
 import { getTodayCheckin } from '@/lib/notion/checkin';
-import { getActiveQuests } from '@/lib/notion/quests';
+import { getActiveQuests, getQuestLog } from '@/lib/notion/quests';
 import { getActiveArc } from '@/lib/notion/arcs';
-import { getCharacterStats } from '@/lib/notion/player';
+import { getPlayerProfile, getCharacterStats } from '@/lib/notion/player';
 import { getCurrentWeekLedger } from '@/lib/notion/ledger';
 import DirectiveTabClient from '@/components/directive/DirectiveTabClient';
 
@@ -9,9 +9,21 @@ export default async function DirectivePage() {
   let checkin = null, quests: any[] = [], arc = null, stats: any[] = [], week = null;
 
   try {
-    [checkin, quests, arc, stats, week] = await Promise.all([
+    // Fetch checkin + player profile first so we know the System Day
+    const [checkinResult, playerResult] = await Promise.all([
       getTodayCheckin(),
-      getActiveQuests(),
+      getPlayerProfile().catch(() => null),
+    ]);
+    checkin = checkinResult;
+
+    // If checked in, fetch ALL quests for today's System Day (not just active) so
+    // completed/failed quests remain visible and the "Close Day" button can appear.
+    const questsPromise = (checkin && playerResult?.day != null)
+      ? getQuestLog({ day: playerResult.day })
+      : getActiveQuests();
+
+    [quests, arc, stats, week] = await Promise.all([
+      questsPromise,
       getActiveArc(),
       getCharacterStats(),
       getCurrentWeekLedger(),
