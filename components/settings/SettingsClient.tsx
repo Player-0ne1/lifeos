@@ -169,15 +169,15 @@ export default function SettingsClient({ player, currentTheme, currentVoice, cur
           ))}
         </div>
 
-        {/* Claude API */}
-        <SectionTitle>Claude API</SectionTitle>
+        {/* Groq API */}
+        <SectionTitle>Groq API</SectionTitle>
         <div style={{ padding: '14px 16px', border: `1px solid ${theme.rule}`, marginBottom: 8 }}>
           <div className="ls-mono" style={{ fontSize: 10, color: theme.accent, letterSpacing: '0.14em', marginBottom: 8 }}>SET IN .env.local</div>
-          <EnvRow label="Anthropic API Key" envKey="ANTHROPIC_API_KEY" />
+          <EnvRow label="Groq API Key" envKey="GROQ_API_KEY" />
           <div style={{ marginTop: 12, padding: '10px 12px', background: theme.surface }}>
             <div className="ls-mono" style={{ fontSize: 10, color: theme.inkMute }}>
-              MODEL: claude-opus-4-7 · PROMPT CACHING ENABLED<br />
-              DIRECTIVE GENERATION: ~800 TOKENS + CACHE<br />
+              MODEL: llama-3.3-70b-versatile<br />
+              DIRECTIVE GENERATION: ~800 TOKENS<br />
               PROOF SCORING: ~300 TOKENS<br />
               SKILL DELIVERABLES: ~500 TOKENS
             </div>
