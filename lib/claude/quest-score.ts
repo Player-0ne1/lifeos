@@ -50,7 +50,7 @@ Rules:
 - Never give positive feedback with exclamation marks. State what was adequate or inadequate.`;
 
   const response = await client.messages.create({
-    model: 'claude-opus-4-7',
+    model: (process.env.CLAUDE_MODEL || 'claude-sonnet-4-5') as string,
     max_tokens: 256,
     messages: [{ role: 'user', content: prompt }],
   });

@@ -18,7 +18,7 @@ export async function generateSkillDeliverable(
   const basePrompt = skillPrompts[skill.name] || `Generate a skill deliverable for: ${skill.name}. Stat: ${skill.stat}. Description: ${skill.description}`;
 
   const response = await client.messages.create({
-    model: 'claude-opus-4-7',
+    model: (process.env.CLAUDE_MODEL || 'claude-sonnet-4-5') as string,
     max_tokens: 512,
     system: SYSTEM_PERSONA,
     messages: [{ role: 'user', content: basePrompt }],
