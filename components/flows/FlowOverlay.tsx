@@ -1,11 +1,8 @@
 'use client';
 import {
   useState,
-  useEffect,
-  useTransition,
   useRef,
   type ChangeEvent,
-  type CSSProperties,
 } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/components/providers/AppProvider';
@@ -331,7 +328,6 @@ function MorningFlow({ onClose }: MorningFlowProps) {
   const [generating, setGenerating] = useState(false);
   const [genLines, setGenLines] = useState<string[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
 
   async function handleSubmit() {
     setStep(3);
@@ -344,30 +340,28 @@ function MorningFlow({ onClose }: MorningFlowProps) {
       setGenLines((prev) => [...prev, GENERATING_MSGS[i]]);
     }
 
-    startTransition(async () => {
-      try {
-        const result = await submitMorningCheckin(energy, constraints, mindNote);
-        if (!result.success) {
-          console.error('Morning checkin error:', result.error);
-          setSubmitError(result.error ?? 'Directive generation failed. Please try again.');
-          setGenerating(false);
-          setGenLines([]);
-          setStep(2);
-          return;
-        }
-        setDayState('mid-day');
-        await new Promise((res) => setTimeout(res, 600));
-        onClose();
-        router.push('/directive');
-        router.refresh();
-      } catch (err) {
-        console.error('Morning checkin error:', err);
-        setSubmitError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+    try {
+      const result = await submitMorningCheckin(energy, constraints, mindNote);
+      if (!result.success) {
+        console.error('Morning checkin error:', result.error);
+        setSubmitError(result.error ?? 'Directive generation failed. Please try again.');
         setGenerating(false);
         setGenLines([]);
         setStep(2);
+        return;
       }
-    });
+      setDayState('mid-day');
+      await new Promise((res) => setTimeout(res, 600));
+      onClose();
+      router.push('/directive');
+      router.refresh();
+    } catch (err) {
+      console.error('Morning checkin error:', err);
+      setSubmitError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      setGenerating(false);
+      setGenLines([]);
+      setStep(2);
+    }
   }
 
   if (step === 3) {
@@ -512,22 +506,20 @@ function EveningFlow({ onClose }: EveningFlowProps) {
   const [dayNote, setDayNote] = useState('');
   const [dayResult, setDayResult] = useState<'all-complete' | 'failed'>('all-complete');
   const [submitting, setSubmitting] = useState(false);
-  const [, startTransition] = useTransition();
 
   async function handleSubmit() {
     setSubmitting(true);
-    startTransition(async () => {
-      try {
-        await submitEveningClose(closeEnergy, dayNote, dayResult);
-        setDayState(dayResult);
-        onClose();
-        router.push('/directive');
-        router.refresh();
-      } catch (err) {
-        console.error('Evening close error:', err);
-        onClose();
-      }
-    });
+    try {
+      await submitEveningClose(closeEnergy, dayNote, dayResult);
+      setDayState(dayResult);
+      onClose();
+      router.push('/directive');
+      router.refresh();
+    } catch (err) {
+      console.error('Evening close error:', err);
+      setSubmitting(false);
+      onClose();
+    }
   }
 
   return (
@@ -625,25 +617,22 @@ function ProofFlow({ questId, onClose }: ProofFlowProps) {
     xpAwarded: number;
     feedback: string;
   } | null>(null);
-  const [, startTransition] = useTransition();
 
   const wc = proofText.trim().split(/\s+/).filter(Boolean).length;
 
   async function handleSubmit() {
     setSubmitting(true);
-    startTransition(async () => {
-      try {
-        const res = await submitProof(questId, proofText, proofUrl, wc);
-        setResult(res);
-        if (res.approved) {
-          router.refresh();
-        }
-      } catch (err) {
-        console.error('Proof submission error:', err);
-      } finally {
-        setSubmitting(false);
+    try {
+      const res = await submitProof(questId, proofText, proofUrl, wc);
+      setResult(res);
+      if (res.approved) {
+        router.refresh();
       }
-    });
+    } catch (err) {
+      console.error('Proof submission error:', err);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (result) {
@@ -818,20 +807,17 @@ function FailConfirm({ questId, onClose }: FailConfirmProps) {
   const { theme, density, voice } = useApp();
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
-  const [, startTransition] = useTransition();
 
   async function handleFail() {
     setConfirming(true);
-    startTransition(async () => {
-      try {
-        await failQuest(questId);
-        router.refresh();
-        onClose();
-      } catch (err) {
-        console.error('Fail quest error:', err);
-        setConfirming(false);
-      }
-    });
+    try {
+      await failQuest(questId);
+      router.refresh();
+      onClose();
+    } catch (err) {
+      console.error('Fail quest error:', err);
+      setConfirming(false);
+    }
   }
 
   return (
@@ -895,26 +881,23 @@ function SundayRitual({ penaltyAmount = 0, onClose }: SundayRitualProps) {
   const [penaltyPaid, setPenaltyPaid] = useState(false);
   const [upiRef, setUpiRef] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [, startTransition] = useTransition();
 
   const hasPenalty = penaltyAmount > 0;
 
   async function handleSubmit() {
     setSubmitting(true);
-    startTransition(async () => {
-      try {
-        await submitSundayRitual({
-          reflection,
-          penaltyPaid,
-          upiRef: upiRef || undefined,
-        });
-        router.refresh();
-        onClose();
-      } catch (err) {
-        console.error('Sunday ritual error:', err);
-        setSubmitting(false);
-      }
-    });
+    try {
+      await submitSundayRitual({
+        reflection,
+        penaltyPaid,
+        upiRef: upiRef || undefined,
+      });
+      router.refresh();
+      onClose();
+    } catch (err) {
+      console.error('Sunday ritual error:', err);
+      setSubmitting(false);
+    }
   }
 
   const stepContent = () => {
