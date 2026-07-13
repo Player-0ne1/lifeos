@@ -9,6 +9,7 @@ export default async function LedgerPage() {
   let pastWeeks: WeeklyLedger[] = [];
   let penalties: Penalty[] = [];
   let financial: FinancialSummary | null = null;
+  let notionError = false;
   try {
     [week, pastWeeks, penalties, financial] = await Promise.all([
       getCurrentWeekLedger(),
@@ -16,7 +17,9 @@ export default async function LedgerPage() {
       getPenalties(),
       getFinancialSummary(),
     ]);
-  } catch {}
-
-  return <LedgerHomeClient week={week} pastWeeks={pastWeeks} penalties={penalties} financial={financial} />;
+  } catch (e) {
+    notionError = true;
+    console.error('Notion error on ledger:', e);
+  }
+  return <LedgerHomeClient week={week} pastWeeks={pastWeeks} penalties={penalties} financial={financial} notionError={notionError} />;
 }

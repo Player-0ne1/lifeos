@@ -13,35 +13,6 @@ import {
 import type { Quest, Stat, QuestStatus } from '@/lib/notion/types';
 import { ALL_STATS } from '@/lib/notion/types';
 
-// ─── Fallback data ────────────────────────────────────────────────────────────
-
-const FALLBACK_QUEST_LOG: Quest[] = [
-  {
-    id: 'qh1', dayAssigned: 13, title: '200-word weekly observation note',
-    stat: 'CRAFT', status: 'complete', xp: 20, points: 0,
-    difficulty: 'Easy', proofType: '', proofStandard: '', brief: '', deadline: null,
-  },
-  {
-    id: 'qh2', dayAssigned: 13, title: 'PickleJam supplier follow-up',
-    stat: 'BUILDER', status: 'complete', xp: 40, points: 0,
-    difficulty: 'Medium', proofType: '', proofStandard: '', brief: '', deadline: null,
-  },
-  {
-    id: 'qh3', dayAssigned: 13, title: 'Comment thoughtfully on 3 posts',
-    stat: 'SIGNAL', status: 'failed', xp: 0, points: 0,
-    difficulty: 'Easy', proofType: '', proofStandard: '', brief: '', deadline: null,
-  },
-  {
-    id: 'qh4', dayAssigned: 12, title: '4K morning run',
-    stat: 'BODY', status: 'complete', xp: 20, points: 0,
-    difficulty: 'Easy', proofType: '', proofStandard: '', brief: '', deadline: null,
-  },
-  {
-    id: 'qh5', dayAssigned: 12, title: '30 pages of Twist of the Wrist',
-    stat: 'MIND', status: 'complete', xp: 40, points: 0,
-    difficulty: 'Medium', proofType: '', proofStandard: '', brief: '', deadline: null,
-  },
-];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -51,11 +22,12 @@ const STATUS_OPTIONS: Array<QuestStatus | 'ALL'> = ['ALL', 'open', 'complete', '
 
 interface Props {
   questLog: Quest[];
+  notionError?: boolean;
 }
 
-export default function QuestLogClient({ questLog }: Props) {
+export default function QuestLogClient({ questLog, notionError = false }: Props) {
   const { theme, density } = useApp();
-  const data = questLog.length > 0 ? questLog : FALLBACK_QUEST_LOG;
+  const data = questLog;
 
   const [statFilter, setStatFilter] = useState<Stat | 'ALL'>('ALL');
   const [statusFilter, setStatusFilter] = useState<QuestStatus | 'ALL'>('ALL');
@@ -92,6 +64,11 @@ export default function QuestLogClient({ questLog }: Props) {
   return (
     <ScreenScroll>
       <div style={{ padding: density.padScreen, maxWidth: 820 }}>
+        {notionError && (
+          <div style={{ marginBottom: 16, padding: '10px 14px', background: `${theme.danger}15`, border: `1px solid ${theme.danger}40` }}>
+            <Mono style={{ color: theme.danger, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Notion unreachable — check env vars</Mono>
+          </div>
+        )}
         <Link href="/quests" style={{ textDecoration: 'none' }}>
           <button className="ls-press ls-mono" style={{
             background: 'transparent', border: 'none', color: theme.inkMute, padding: 0,

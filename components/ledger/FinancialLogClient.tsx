@@ -13,23 +13,6 @@ import {
 import { addFinancialEntryAction } from '@/actions/ledger';
 import type { FinancialEntry, FinancialSummary } from '@/lib/notion/types';
 
-// ─── Fallback data ────────────────────────────────────────────────────────────
-
-const FALLBACK_ENTRIES: FinancialEntry[] = [
-  { id: 'f1', date: '2026-06-01', type: 'income', amount: 85000, category: 'Salary', note: 'June salary' },
-  { id: 'f2', date: '2026-06-02', type: 'expense', amount: 18000, category: 'Rent', note: 'Monthly rent' },
-  { id: 'f3', date: '2026-06-03', type: 'expense', amount: 4200, category: 'Food', note: 'Groceries + eating out' },
-  { id: 'f4', date: '2026-06-05', type: 'expense', amount: 5000, category: 'GT Cup Fund', note: 'Monthly transfer' },
-  { id: 'f5', date: '2026-06-07', type: 'income', amount: 12000, category: 'Freelance', note: 'Content project' },
-];
-
-const FALLBACK_SUMMARY: FinancialSummary = {
-  totalIncome: 97000,
-  totalExpenses: 27200,
-  net: 69800,
-  byCategory: {},
-};
-
 const INCOME_CATEGORIES = ['Salary', 'Freelance', 'Consulting', 'Investment Returns', 'GT Cup Fund', 'Other'];
 const EXPENSE_CATEGORIES = ['Rent', 'Food', 'Investment', 'GT Cup Fund', 'Transport', 'Subscriptions', 'Other'];
 
@@ -152,12 +135,13 @@ function AddEntry({ onClose }: AddEntryProps) {
 interface Props {
   entries: FinancialEntry[];
   summary: FinancialSummary | null;
+  notionError?: boolean;
 }
 
-export default function FinancialLogClient({ entries, summary }: Props) {
+export default function FinancialLogClient({ entries, summary, notionError = false }: Props) {
   const { theme, density } = useApp();
-  const data = entries.length > 0 ? entries : FALLBACK_ENTRIES;
-  const sum = summary ?? FALLBACK_SUMMARY;
+  const data = entries;
+  const sum: FinancialSummary = summary ?? { totalIncome: 0, totalExpenses: 0, net: 0, byCategory: {} };
 
   const [catFilter, setCatFilter] = useState('ALL');
   const [showAdd, setShowAdd] = useState(false);
@@ -173,6 +157,11 @@ export default function FinancialLogClient({ entries, summary }: Props) {
   return (
     <ScreenScroll>
       <div style={{ padding: density.padScreen, maxWidth: 920 }}>
+        {notionError && (
+          <div style={{ marginBottom: 16, padding: '10px 14px', background: `${theme.danger}15`, border: `1px solid ${theme.danger}40` }}>
+            <Mono style={{ color: theme.danger, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Notion unreachable — check env vars</Mono>
+          </div>
+        )}
         <Link href="/ledger" style={{ textDecoration: 'none' }}>
           <button className="ls-press ls-mono" style={{
             background: 'transparent', border: 'none', color: theme.inkMute, padding: 0,

@@ -10,24 +10,16 @@ import {
 } from '@/components/primitives/index';
 import type { WeeklyLedger } from '@/lib/notion/types';
 
-// ─── Fallback data ────────────────────────────────────────────────────────────
-
-const FALLBACK_WEEKS: WeeklyLedger[] = [
-  { id: 'w1', weekNum: 1, weekRange: '05–11 May 2026', questsCompleted: 14, questsTotal: 18, completionPct: 78, penaltyAmount: 0, xpEarned: 560, status: 'closed' },
-  { id: 'w2', weekNum: 2, weekRange: '12–18 May 2026', questsCompleted: 12, questsTotal: 20, completionPct: 60, penaltyAmount: 500, xpEarned: 480, status: 'closed' },
-  { id: 'w3', weekNum: 3, weekRange: '19–25 May 2026', questsCompleted: 19, questsTotal: 21, completionPct: 90, penaltyAmount: 0, xpEarned: 760, status: 'closed' },
-  { id: 'w4', weekNum: 4, weekRange: '26 May–01 Jun 2026', questsCompleted: 16, questsTotal: 21, completionPct: 76, penaltyAmount: 0, xpEarned: 640, status: 'open' },
-];
-
 // ─── WeeklyHistoryClient ──────────────────────────────────────────────────────
 
 interface Props {
   weeks: WeeklyLedger[];
+  notionError?: boolean;
 }
 
-export default function WeeklyHistoryClient({ weeks }: Props) {
+export default function WeeklyHistoryClient({ weeks, notionError = false }: Props) {
   const { theme, density } = useApp();
-  const data = weeks.length > 0 ? weeks : FALLBACK_WEEKS;
+  const data = weeks;
 
   // Oldest first for spark chart
   const chronoWeeks = [...data].sort((a, b) => a.weekNum - b.weekNum);
@@ -45,6 +37,11 @@ export default function WeeklyHistoryClient({ weeks }: Props) {
   return (
     <ScreenScroll>
       <div style={{ padding: density.padScreen, maxWidth: 820 }}>
+        {notionError && (
+          <div style={{ marginBottom: 16, padding: '10px 14px', background: `${theme.danger}15`, border: `1px solid ${theme.danger}40` }}>
+            <Mono style={{ color: theme.danger, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Notion unreachable — check env vars</Mono>
+          </div>
+        )}
         <Link href="/ledger" style={{ textDecoration: 'none' }}>
           <button className="ls-press ls-mono" style={{
             background: 'transparent', border: 'none', color: theme.inkMute, padding: 0,

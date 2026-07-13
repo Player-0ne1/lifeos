@@ -4,6 +4,10 @@ import type { WeeklyLedger } from '@/lib/notion/types';
 
 export default async function HistoryPage() {
   let weeks: WeeklyLedger[] = [];
-  try { weeks = await getWeeklyHistory(12); } catch {}
-  return <WeeklyHistoryClient weeks={weeks} />;
+  let notionError = false;
+  try { weeks = await getWeeklyHistory(12); } catch (e) {
+    notionError = true;
+    console.error('Notion error on history:', e);
+  }
+  return <WeeklyHistoryClient weeks={weeks} notionError={notionError} />;
 }

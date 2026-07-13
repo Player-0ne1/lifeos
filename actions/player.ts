@@ -6,10 +6,16 @@ import { cookies } from 'next/headers';
 export async function updatePlayerSettingsAction(updates: {
   name?: string;
   penaltyAmount?: number;
-}): Promise<void> {
-  await updatePlayerProfile(updates);
-  revalidatePath('/settings');
-  revalidatePath('/');
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    await updatePlayerProfile(updates);
+    revalidatePath('/settings');
+    revalidatePath('/');
+    return { success: true };
+  } catch (error) {
+    console.error('updatePlayerSettingsAction error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
 }
 
 export async function setThemeAction(theme: string): Promise<void> {

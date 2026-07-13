@@ -9,31 +9,27 @@ import {
 } from '@/components/primitives/index';
 import type { Penalty } from '@/lib/notion/types';
 
-// ─── Fallback data ────────────────────────────────────────────────────────────
-
-const FALLBACK_PENALTIES: Penalty[] = [
-  {
-    id: 'p1', weekNum: 2, amount: 500,
-    reason: 'Week 02 completion: 60%',
-    paidDate: '2026-05-19', upiRef: 'UPI/26514/REF001', isPaid: true,
-  },
-];
-
 // ─── PenaltyLogClient ─────────────────────────────────────────────────────────
 
 interface Props {
   penalties: Penalty[];
+  notionError?: boolean;
 }
 
-export default function PenaltyLogClient({ penalties }: Props) {
+export default function PenaltyLogClient({ penalties, notionError = false }: Props) {
   const { theme, density } = useApp();
-  const data = penalties.length > 0 ? penalties : FALLBACK_PENALTIES;
+  const data = penalties;
 
   const total = data.reduce((s, p) => s + p.amount, 0);
 
   return (
     <ScreenScroll>
       <div style={{ padding: density.padScreen, maxWidth: 820 }}>
+        {notionError && (
+          <div style={{ marginBottom: 16, padding: '10px 14px', background: `${theme.danger}15`, border: `1px solid ${theme.danger}40` }}>
+            <Mono style={{ color: theme.danger, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Notion unreachable — check env vars</Mono>
+          </div>
+        )}
         <Link href="/ledger" style={{ textDecoration: 'none' }}>
           <button className="ls-press ls-mono" style={{
             background: 'transparent', border: 'none', color: theme.inkMute, padding: 0,

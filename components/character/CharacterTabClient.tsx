@@ -32,6 +32,7 @@ interface CharacterTabClientProps {
   skills: Skill[];
   passives: PassiveGroups;
   arc: ArcTracker | null;
+  notionError?: boolean;
 }
 
 type SubView = 'overview' | 'skills' | 'passives' | 'pillars' | 'level';
@@ -675,6 +676,7 @@ export default function CharacterTabClient({
   skills,
   passives,
   arc,
+  notionError = false,
 }: CharacterTabClientProps) {
   const router = useRouter();
   const [subView, setSubView] = useState<SubView>('overview');

@@ -5,7 +5,8 @@ import { getActiveArc } from '@/lib/notion/arcs';
 import CharacterTabClient from '@/components/character/CharacterTabClient';
 
 export default async function CharacterPage() {
-  let player: any, stats: any[], skills: any[], passives: any[], arc: any;
+  let player: any = null, stats: any[] = [], skills: any[] = [], passives: any[] = [], arc: any = null;
+  let notionError = false;
   try {
     [player, stats, skills, passives, arc] = await Promise.all([
       getPlayerProfile(),
@@ -14,12 +15,11 @@ export default async function CharacterPage() {
       getPassives(),
       getActiveArc(),
     ]);
-  } catch {
-    player = { id: 'fallback', name: 'ONE', level: 1, totalXP: 0, xpToNext: 500, day: 1, streak: 0, bestStreak: 0 };
-    stats = []; skills = []; passives = []; arc = null;
+  } catch (e) {
+    notionError = true;
+    console.error('Notion error on character:', e);
   }
 
-  // Group passives by status
   const passivesByStatus = {
     active: (passives ?? []).filter((p: any) => p.status === 'active'),
     building: (passives ?? []).filter((p: any) => p.status === 'building'),
@@ -33,6 +33,7 @@ export default async function CharacterPage() {
       skills={skills ?? []}
       passives={passivesByStatus}
       arc={arc}
+      notionError={notionError}
     />
   );
 }

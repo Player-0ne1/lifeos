@@ -3,6 +3,10 @@ import ArcTrackerClient from '@/components/quests/ArcTrackerClient';
 
 export default async function ArcPage() {
   let arc = null;
-  try { arc = await getActiveArc(); } catch {}
-  return <ArcTrackerClient arc={arc} />;
+  let notionError = false;
+  try { arc = await getActiveArc(); } catch (e) {
+    notionError = true;
+    console.error('Notion error on arc:', e);
+  }
+  return <ArcTrackerClient arc={arc} notionError={notionError} />;
 }

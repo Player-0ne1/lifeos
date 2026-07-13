@@ -12,46 +12,6 @@ import {
 import type { QuestTemplate, Stat } from '@/lib/notion/types';
 import { ALL_STATS } from '@/lib/notion/types';
 
-// ─── Fallback data ────────────────────────────────────────────────────────────
-
-const FALLBACK_LIBRARY: QuestTemplate[] = [
-  {
-    id: 'l1', stat: 'CRAFT', difficulty: 'Easy',
-    title: "Write 200 words on today's observation",
-    xpValue: 20, timeEstimate: '20 min', energyLevel: 'Low',
-    brief: '', proofStandard: 'Paste ≥ 200 words',
-  },
-  {
-    id: 'l2', stat: 'CRAFT', difficulty: 'Medium',
-    title: '600-word essay (Substack-ready)',
-    xpValue: 40, timeEstimate: '60 min', energyLevel: 'Medium',
-    brief: '', proofStandard: 'Paste ≥ 600 words',
-  },
-  {
-    id: 'l3', stat: 'BUILDER', difficulty: 'Easy',
-    title: 'PickleJam: Follow up with one supplier',
-    xpValue: 30, timeEstimate: '30 min', energyLevel: 'Low',
-    brief: '', proofStandard: 'Screenshot of message sent',
-  },
-  {
-    id: 'l4', stat: 'BODY', difficulty: 'Easy',
-    title: '4K morning run',
-    xpValue: 20, timeEstimate: '30 min', energyLevel: 'Medium',
-    brief: '', proofStandard: 'Screenshot of run tracker',
-  },
-  {
-    id: 'l5', stat: 'MIND', difficulty: 'Easy',
-    title: '30 pages of current book',
-    xpValue: 20, timeEstimate: '45 min', energyLevel: 'Low',
-    brief: '', proofStandard: 'Note page start and end',
-  },
-  {
-    id: 'l6', stat: 'SIGNAL', difficulty: 'Easy',
-    title: 'Comment thoughtfully on 3 posts',
-    xpValue: 15, timeEstimate: '20 min', energyLevel: 'Low',
-    brief: '', proofStandard: 'Screenshot of 3 comments',
-  },
-];
 
 // ─── HiddenQuests ─────────────────────────────────────────────────────────────
 
@@ -77,11 +37,12 @@ function HiddenQuestsNote() {
 
 interface Props {
   library: QuestTemplate[];
+  notionError?: boolean;
 }
 
-export default function QuestLibraryClient({ library }: Props) {
+export default function QuestLibraryClient({ library, notionError = false }: Props) {
   const { theme, density } = useApp();
-  const data = library.length > 0 ? library : FALLBACK_LIBRARY;
+  const data = library;
 
   const [statFilter, setStatFilter] = useState<Stat | 'ALL'>('ALL');
   const [diffFilter, setDiffFilter] = useState<'ALL' | 'Easy' | 'Medium' | 'Hard'>('ALL');
@@ -102,6 +63,11 @@ export default function QuestLibraryClient({ library }: Props) {
   return (
     <ScreenScroll>
       <div style={{ padding: density.padScreen, maxWidth: 820 }}>
+        {notionError && (
+          <div style={{ marginBottom: 16, padding: '10px 14px', background: `${theme.danger}15`, border: `1px solid ${theme.danger}40` }}>
+            <Mono style={{ color: theme.danger, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Notion unreachable — check env vars</Mono>
+          </div>
+        )}
         <Link href="/quests" style={{ textDecoration: 'none' }}>
           <button className="ls-press ls-mono" style={{
             background: 'transparent', border: 'none', color: theme.inkMute, padding: 0,

@@ -4,6 +4,10 @@ import type { Penalty } from '@/lib/notion/types';
 
 export default async function PenaltiesPage() {
   let penalties: Penalty[] = [];
-  try { penalties = await getPenalties(); } catch {}
-  return <PenaltyLogClient penalties={penalties} />;
+  let notionError = false;
+  try { penalties = await getPenalties(); } catch (e) {
+    notionError = true;
+    console.error('Notion error on penalties:', e);
+  }
+  return <PenaltyLogClient penalties={penalties} notionError={notionError} />;
 }

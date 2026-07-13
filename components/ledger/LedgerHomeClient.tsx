@@ -12,20 +12,6 @@ import type { WeeklyLedger } from '@/lib/notion/types';
 import type { Penalty } from '@/lib/notion/types';
 import type { FinancialSummary } from '@/lib/notion/types';
 
-// ─── Fallback data ────────────────────────────────────────────────────────────
-
-const FALLBACK_WEEK: WeeklyLedger = {
-  id: 'week-4',
-  weekNum: 4,
-  weekRange: '02–08 Jun 2026',
-  questsCompleted: 16,
-  questsTotal: 21,
-  completionPct: 76,
-  penaltyAmount: 0,
-  xpEarned: 720,
-  status: 'open',
-};
-
 // ─── LedgerHomeClient ─────────────────────────────────────────────────────────
 
 interface Props {
@@ -33,11 +19,29 @@ interface Props {
   pastWeeks: WeeklyLedger[];
   penalties: Penalty[];
   financial: FinancialSummary | null;
+  notionError?: boolean;
 }
 
-export default function LedgerHomeClient({ week, pastWeeks, penalties, financial }: Props) {
+export default function LedgerHomeClient({ week, pastWeeks, penalties, financial, notionError = false }: Props) {
   const { theme, density, voice, setOverlay } = useApp();
-  const w = week ?? FALLBACK_WEEK;
+
+  if (notionError) {
+    return (
+      <ScreenScroll>
+        <div style={{ padding: density.padScreen }}>
+          <div style={{ padding: '14px 16px', background: `${theme.danger}15`, border: `1px solid ${theme.danger}40` }}>
+            <Mono style={{ color: theme.danger, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Notion unreachable — check env vars</Mono>
+          </div>
+        </div>
+      </ScreenScroll>
+    );
+  }
+
+  // Safe defaults when no active week exists yet
+  const w: WeeklyLedger = week ?? {
+    id: '', weekNum: 0, weekRange: '—', questsCompleted: 0, questsTotal: 0,
+    completionPct: 0, penaltyAmount: 0, xpEarned: 0, status: 'open',
+  };
 
   const allTimePenalty = penalties.reduce((s, p) => s + p.amount, 0);
 
