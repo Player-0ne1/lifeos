@@ -1,5 +1,6 @@
 import { getNotionClient } from './client';
 import { DB } from './databases';
+import { todayIST } from '@/lib/utils';
 import type { DailyCheckin, CheckinStatus } from './types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -47,10 +48,10 @@ function mapCheckin(page: any): DailyCheckin {
 
 export async function getTodayCheckin(): Promise<DailyCheckin | null> {
   const notion = getNotionClient();
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayIST();
 
-  const res = await notion.dataSources.query({
-    data_source_id: DB.CHECKIN_LOG,
+  const res = await notion.databases.query({
+    database_id: DB.CHECKIN_LOG,
     filter: {
       property: 'Date',
       date: { equals: today },
@@ -138,12 +139,13 @@ export async function updateCheckin(
 export async function getRecentCheckins(days: number = 7): Promise<DailyCheckin[]> {
   const notion = getNotionClient();
 
-  const since = new Date();
-  since.setDate(since.getDate() - days);
-  const sinceStr = since.toISOString().split('T')[0];
+  // Compute "N days ago" in IST to avoid UTC midnight split-brain
+  const todayMs = new Date(todayIST() + 'T00:00:00+05:30').getTime();
+  const sinceStr = new Date(todayMs - days * 86400000)
+    .toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
 
-  const res = await notion.dataSources.query({
-    data_source_id: DB.CHECKIN_LOG,
+  const res = await notion.databases.query({
+    database_id: DB.CHECKIN_LOG,
     filter: {
       property: 'Date',
       date: { on_or_after: sinceStr },

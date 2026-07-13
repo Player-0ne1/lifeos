@@ -36,7 +36,7 @@ export async function getPenalties(unpaidOnly: boolean = false): Promise<Penalty
   const notion = getNotionClient();
 
   const queryParams: any = {
-    data_source_id: DB.PENALTY_LOG,
+    database_id: DB.PENALTY_LOG,
     sorts: [{ property: 'Week Num', direction: 'descending' }],
     page_size: 100,
   };
@@ -48,7 +48,7 @@ export async function getPenalties(unpaidOnly: boolean = false): Promise<Penalty
     };
   }
 
-  const res = await notion.dataSources.query(queryParams);
+  const res = await notion.databases.query(queryParams);
 
   return res.results
     .filter((page) => page.object === 'page')

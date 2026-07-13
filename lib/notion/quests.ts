@@ -68,8 +68,8 @@ function mapQuestTemplate(page: any): QuestTemplate {
 
 export async function getActiveQuests(): Promise<Quest[]> {
   const notion = getNotionClient();
-  const res = await notion.dataSources.query({
-    data_source_id: DB.QUEST_LOG,
+  const res = await notion.databases.query({
+    database_id: DB.QUEST_LOG,
     filter: {
       or: [
         { property: 'Status', select: { equals: 'Assigned' } },
@@ -104,7 +104,7 @@ export async function getQuestLog(filter?: { status?: QuestStatus; stat?: Stat; 
   }
 
   const queryParams: any = {
-    data_source_id: DB.QUEST_LOG,
+    database_id: DB.QUEST_LOG,
     sorts: [{ property: 'System Day', direction: 'descending' }],
     page_size: 100,
   };
@@ -115,7 +115,7 @@ export async function getQuestLog(filter?: { status?: QuestStatus; stat?: Stat; 
     queryParams.filter = { and: filters };
   }
 
-  const res = await notion.dataSources.query(queryParams);
+  const res = await notion.databases.query(queryParams);
 
   return res.results
     .filter((page) => page.object === 'page')
@@ -126,7 +126,7 @@ export async function getQuestLibrary(statFilter?: Stat): Promise<QuestTemplate[
   const notion = getNotionClient();
 
   const queryParams: any = {
-    data_source_id: DB.QUEST_LIBRARY,
+    database_id: DB.QUEST_LIBRARY,
     sorts: [{ property: 'Quest Name', direction: 'ascending' }],
     page_size: 100,
   };
@@ -138,7 +138,7 @@ export async function getQuestLibrary(statFilter?: Stat): Promise<QuestTemplate[
     };
   }
 
-  const res = await notion.dataSources.query(queryParams);
+  const res = await notion.databases.query(queryParams);
 
   return res.results
     .filter((page) => page.object === 'page')
