@@ -37,13 +37,14 @@ function mapArc(page: any): ArcTracker {
 export async function getActiveArc(): Promise<ArcTracker | null> {
   const notion = getNotionClient();
 
+  // Note: no sorts here — 'Day Elapsed' is not a direct property in this DB schema.
+  // The filter for Status='active' is sufficient since only one arc is active at a time.
   const res = await notion.databases.query({
     database_id: DB.ARC_TRACKER,
     filter: {
       property: 'Status',
       select: { equals: 'active' },
     },
-    sorts: [{ property: 'Day Elapsed', direction: 'descending' }],
     page_size: 1,
   });
 

@@ -5,6 +5,12 @@ import { getPlayerProfile, getCharacterStats } from '@/lib/notion/player';
 import { getCurrentWeekLedger } from '@/lib/notion/ledger';
 import DirectiveTabClient from '@/components/directive/DirectiveTabClient';
 
+// Always render fresh — never serve a cached RSC payload.
+// This ensures router.refresh() (fired after the check-in animation) sees
+// newly created quests rather than a revalidation snapshot from milliseconds
+// after createQuest() was called (Notion indexing hasn't caught up by then).
+export const dynamic = 'force-dynamic';
+
 export default async function DirectivePage() {
   let checkin = null, quests: any[] = [], arc = null, stats: any[] = [], week = null;
 
@@ -12,9 +18,14 @@ export default async function DirectivePage() {
     // Fetch checkin + player profile first so we know the System Day
     const [checkinResult, playerResult] = await Promise.all([
       getTodayCheckin(),
-      getPlayerProfile().catch(() => null),
+      getPlayerProfile().catch((e) => {
+        console.error('[directive] getPlayerProfile error:', e?.message ?? e);
+        return null;
+      }),
     ]);
     checkin = checkinResult;
+
+    console.log('[directive] render — checkin:', !!checkin, '| playerDay:', playerResult?.day ?? 'null');
 
     // If checked in, fetch ALL quests for today's System Day (not just active) so
     // completed/failed quests remain visible and the "Close Day" button can appear.
@@ -23,13 +34,29 @@ export default async function DirectivePage() {
       : getActiveQuests();
 
     [quests, arc, stats, week] = await Promise.all([
-      questsPromise.catch(() => []),
-      getActiveArc().catch(() => null),
-      getCharacterStats().catch(() => []),
-      getCurrentWeekLedger().catch(() => null),
+      questsPromise.catch((e) => {
+        console.error('[directive] questsPromise error:', e?.message ?? e);
+        return [];
+      }),
+      getActiveArc().catch((e) => {
+        console.error('[directive] getActiveArc error:', e?.message ?? e);
+        return null;
+      }),
+      getCharacterStats().catch((e) => {
+        console.error('[directive] getCharacterStats error:', e?.message ?? e);
+        return [];
+      }),
+      getCurrentWeekLedger().catch((e) => {
+        console.error('[directive] getCurrentWeekLedger error:', e?.message ?? e);
+        return null;
+      }),
     ]);
-  } catch {
+
+    console.log('[directive] result — quests:', quests.length, '| arc:', !!arc, '| stats:', stats.length, '| week:', !!week);
+  } catch (e: unknown) {
     // Notion not configured — show skeleton/pre-checkin state
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('[directive] outer catch:', msg);
   }
 
   // Determine day state from check-in status

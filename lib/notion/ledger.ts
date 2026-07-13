@@ -36,13 +36,14 @@ function mapLedger(page: any): WeeklyLedger {
 export async function getCurrentWeekLedger(): Promise<WeeklyLedger | null> {
   const notion = getNotionClient();
 
+  // Note: no sorts here — the 'Week Num' property does not exist in this DB schema.
+  // The filter for Status='open' is sufficient since only one week is open at a time.
   const res = await notion.databases.query({
     database_id: DB.WEEKLY_LEDGER,
     filter: {
       property: 'Status',
       select: { equals: 'open' },
     },
-    sorts: [{ property: 'Week Num', direction: 'descending' }],
     page_size: 1,
   });
 
