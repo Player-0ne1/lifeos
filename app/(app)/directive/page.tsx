@@ -23,10 +23,10 @@ export default async function DirectivePage() {
       : getActiveQuests();
 
     [quests, arc, stats, week] = await Promise.all([
-      questsPromise,
-      getActiveArc(),
-      getCharacterStats(),
-      getCurrentWeekLedger(),
+      questsPromise.catch(() => []),
+      getActiveArc().catch(() => null),
+      getCharacterStats().catch(() => []),
+      getCurrentWeekLedger().catch(() => null),
     ]);
   } catch {
     // Notion not configured — show skeleton/pre-checkin state
